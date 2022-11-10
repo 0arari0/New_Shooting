@@ -12,13 +12,14 @@ public class Player : MonoBehaviour
     public int life;
     public int score;
     public float speed;
-    public float power;
+    public int power;
+    public int maxPower;
     public float maxShotDelay;
     public float curShotDelay;
 
     public GameObject bulletObjA;
     public GameObject bulletObjB;
-
+    public GameObject boomEffect;
     public GameManager manager;
     public bool isHit;
 
@@ -71,6 +72,7 @@ public class Player : MonoBehaviour
                 GameObject bullet = Instantiate(bulletObjA, transform.position, transform.rotation);
                 Rigidbody2D rigid = bullet.GetComponent<Rigidbody2D>();
                 rigid.AddForce(Vector2.up * 10, ForceMode2D.Impulse);
+                Debug.Log("shoot");
                 break;
             case 2:
                 GameObject bulletR = Instantiate(bulletObjA, transform.position + Vector3.right*0.1f, transform.rotation);
@@ -93,9 +95,6 @@ public class Player : MonoBehaviour
                 break;
 
         }
-
-        
-
         curShotDelay = 0;
     }
     void Reload()
@@ -146,6 +145,56 @@ public class Player : MonoBehaviour
             gameObject.SetActive(false);
             Destroy(collision.gameObject);
         }
+        else if(collision.gameObject.tag == "Item")
+        {
+            Item item = collision.gameObject.GetComponent<Item>();
+            switch (item.type)
+            {
+                case "Coin":
+                    //코인 획득시 1000점 추가
+                    score += 1000;
+                    break;
+                case "Power":
+                    //힘이 이미 최대라면 보너스 점수 500점
+                    if (power == maxPower)
+                        score += 500;
+                    //힘 하나씩 올리기 max =3
+                    else
+                        power++; 
+                    break;
+                //필살기 : 사용 시 적 비행기+적 총알 모두 삭제
+                case "Boom":
+                    //#1.이펙트 나타남
+                    boomEffect.SetActive(true);
+                    //폭탄 스프라이트는 invoke로 시간차 비활성화
+                    Invoke("OffBoomEffect", 3f);
+
+                    //#2.적 지우기
+                    //해당 태그로 장면의 모든 오브젝트를 추출 , 해당 태그가 배열에 저장됨
+                    GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy"); 
+                    //해당 갯수만큼 없애기 위해 접근 for문 사용
+                    for (int i = 0; i < enemies.Length; i++)
+                    {
+                        Enemy enemyLogic = enemies[i].GetComponent<Enemy>();
+                        enemyLogic.OnHit(1000); // 폭탄에 맞을 시 데미지 1000 OnHit함수와 연결됨
+                    }
+
+                    //#3. 적 총알 지우기
+                    GameObject[] bullets = GameObject.FindGameObjectsWithTag("EnemyBullet");
+                    for (int i = 0; i < bullets.Length; i++)
+                    {
+                        //총알 모두 삭제
+                        Destroy(bullets[i]); 
+                    }
+                    break;
+            }
+        }
+        //먹은 아이템 삭제
+        Destroy(collision.gameObject);
+    }
+    void OffBoomEffect()
+    {
+        boomEffect.SetActive(false);
     }
     void OnTriggerExit2D(Collider2D collision)
     {
