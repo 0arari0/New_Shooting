@@ -87,7 +87,6 @@ public class GameManager : MonoBehaviour
     public void GameOver()
     {
         gameOverSet.SetActive(true);
-        Destroy(player);
     }
 
     public void GameRetry()

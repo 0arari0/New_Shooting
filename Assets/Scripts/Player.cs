@@ -188,9 +188,10 @@ public class Player : MonoBehaviour
                     }
                     break;
             }
+            //먹은 아이템 삭제
+            Destroy(collision.gameObject);
         }
-        //먹은 아이템 삭제
-        Destroy(collision.gameObject);
+        
     }
     void OffBoomEffect()
     {
